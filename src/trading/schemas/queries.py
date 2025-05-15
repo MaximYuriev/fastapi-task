@@ -17,11 +17,11 @@ class GetDynamicsQuery(PaginationQuery):
     oil_id: str | None = None
     delivery_type_id: str | None = None
     delivery_basis_id: str | None = None
-    start_date: datetime.date
-    end_date: datetime.date
+    start_date: datetime.date = Field(exclude=True)
+    end_date: datetime.date = Field(exclude=True)
 
     @model_validator(mode="after")
     def validate_dates(self) -> Self:
-        if self.end_date > self.start_date:
-            raise ValueError("end_date must be grater then start_date")
+        if self.end_date < self.start_date:
+            raise ValueError("end_date must be grater or equal then start_date")
         return self

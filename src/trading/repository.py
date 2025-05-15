@@ -1,11 +1,12 @@
 import datetime
-from typing import Iterable
+from typing import Iterable, Any
 
-from sqlalchemy import select, func
+from sqlalchemy import select, func, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.trading.interfaces import TradingResultRepository
-from src.trading.models import TradingResult
+from src.trading.models import TradingResult as TradingResultModel
+from src.trading.schemas.responses import TradingResult
 
 
 class SQLAlchemyTradingResultRepository(TradingResultRepository):
@@ -15,7 +16,7 @@ class SQLAlchemyTradingResultRepository(TradingResultRepository):
     async def get_trading_date_count(self) -> int:
         query = select(
             func.count(
-                func.distinct(TradingResult.date)
+                func.distinct(TradingResultModel.date)
             )
         )
         query_result = await self._session.execute(query)
@@ -23,11 +24,53 @@ class SQLAlchemyTradingResultRepository(TradingResultRepository):
 
     async def get_last_trading_date(self, limit: int, offset: int) -> Iterable[datetime.date]:
         query = (
-            select(TradingResult.date)
+            select(TradingResultModel.date)
             .distinct()
-            .order_by(TradingResult.date.desc())
+            .order_by(TradingResultModel.date.desc())
             .limit(limit)
             .offset(offset)
         )
         result = await self._session.scalars(query)
         return result.all()
+
+    async def get_trading_result_count_for_period(
+            self,
+            filters: dict[str, Any],
+            start_period_date: datetime.date,
+            end_period_date: datetime.date,
+    ) -> int:
+        query = (
+            select(func.count(TradingResultModel.id))
+            .filter_by(**filters)
+            .where(
+                and_(
+                    TradingResultModel.date >= start_period_date,
+                    TradingResultModel.date <= end_period_date,
+                )
+            )
+        )
+        query_result = await self._session.execute(query)
+        return query_result.scalar()
+
+    async def get_trading_result_for_period(
+            self,
+            filters: dict[str, Any],
+            start_period_date: datetime.date,
+            end_period_date: datetime.date,
+            limit: int,
+            offset: int
+    ) -> list[TradingResult]:
+        query = (
+            select(TradingResultModel)
+            .filter_by(**filters)
+            .where(
+                and_(
+                    TradingResultModel.date >= start_period_date,
+                    TradingResultModel.date <= end_period_date,
+                )
+            )
+            .limit(limit)
+            .offset(offset)
+        )
+        model_list = await self._session.scalars(query)
+        return [TradingResult.model_validate(model, from_attributes=True) for model in model_list.all()]

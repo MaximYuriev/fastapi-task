@@ -4,8 +4,8 @@ from dishka import FromDishka
 from dishka.integrations.fastapi import inject
 from fastapi import APIRouter, Query
 
-from src.trading.schemas.queries import GetLastTradingDatesQuery
-from src.trading.schemas.responses import TradingLastDaysResponse
+from src.trading.schemas.queries import GetLastTradingDatesQuery, GetDynamicsQuery
+from src.trading.schemas.responses import TradingLastDaysResponse, TradingResultResponse
 from src.trading.service import TradingResultService
 
 router = APIRouter(prefix="/tradings", tags=["Tradings"])
@@ -18,3 +18,12 @@ async def get_last_trading_dates_handler(
         service: FromDishka[TradingResultService],
 ) -> TradingLastDaysResponse:
     return await service.get_last_trading_dates(query)
+
+
+@router.get("/dynamics/", summary="Список торгов за заданный период.")
+@inject
+async def get_dynamics_handler(
+        query: Annotated[GetDynamicsQuery, Query()],
+        service: FromDishka[TradingResultService],
+) -> TradingResultResponse:
+    return await service.get_dynamics(query)
