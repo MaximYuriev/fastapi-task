@@ -13,6 +13,7 @@ class PostgresConfig(BaseSettings):
         env_file=_ENV_DIR,
         env_file_encoding='utf-8',
         env_prefix="POSTGRES_",
+        extra="ignore",
     )
     host: str
     port: int
@@ -25,8 +26,24 @@ class PostgresConfig(BaseSettings):
         return f"postgresql+asyncpg://{self.user}:{self.password}@{self.host}:{self.port}/{self.db}"
 
 
+class RedisConfig(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=_ENV_DIR,
+        env_file_encoding='utf-8',
+        env_prefix="REDIS_",
+        extra="ignore",
+    )
+
+    host: str
+
+    @property
+    def redis_url(self) -> str:
+        return f"redis://{self.host}"
+
+
 class Config(BaseSettings):
     postgres: PostgresConfig = Field(default_factory=PostgresConfig)
+    redis: RedisConfig = Field(default_factory=RedisConfig)
 
 
 config = Config()
