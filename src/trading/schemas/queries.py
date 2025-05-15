@@ -13,10 +13,13 @@ class GetLastTradingDatesQuery(PaginationQuery):
     pass
 
 
-class GetDynamicsQuery(PaginationQuery):
+class GetTradingResultQuery(PaginationQuery):
     oil_id: str | None = None
     delivery_type_id: str | None = None
     delivery_basis_id: str | None = None
+
+
+class GetDynamicsQuery(GetTradingResultQuery):
     start_date: datetime.date = Field(exclude=True)
     end_date: datetime.date = Field(exclude=True)
 

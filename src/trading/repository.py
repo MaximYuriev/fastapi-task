@@ -75,3 +75,22 @@ class SQLAlchemyTradingResultRepository(TradingResultRepository):
         )
         model_list = await self._session.scalars(query)
         return [TradingResult.model_validate(model, from_attributes=True) for model in model_list.all()]
+
+    async def get_trading_result_count(self, filters: dict[str, Any]) -> int:
+        query = (
+            select(func.count(TradingResultModel.id))
+            .filter_by(**filters)
+        )
+        query_result = await self._session.execute(query)
+        return query_result.scalar()
+
+    async def get_trading_result(self, filters: dict[str, Any], limit: int, offset: int) -> list[TradingResult]:
+        query = (
+            select(TradingResultModel)
+            .filter_by(**filters)
+            .order_by(TradingResultModel.date.desc())
+            .limit(limit)
+            .offset(offset)
+        )
+        model_list = await self._session.scalars(query)
+        return [TradingResult.model_validate(model, from_attributes=True) for model in model_list.all()]

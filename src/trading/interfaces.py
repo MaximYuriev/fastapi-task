@@ -33,3 +33,19 @@ class TradingResultRepository(ABC):
             offset: int,
     ) -> list[TradingResult]:
         pass
+
+    @abstractmethod
+    async def get_trading_result_count(
+            self,
+            filters: dict[str, Any],
+    ) -> int:
+        pass
+
+    @abstractmethod
+    async def get_trading_result(
+            self,
+            filters: dict[str, Any],
+            limit: int,
+            offset: int,
+    ) -> list[TradingResult]:
+        pass
