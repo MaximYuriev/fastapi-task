@@ -69,6 +69,7 @@ class SQLAlchemyTradingResultRepository(TradingResultRepository):
                     TradingResultModel.date <= end_period_date,
                 )
             )
+            .order_by(TradingResultModel.date.desc())
             .limit(limit)
             .offset(offset)
         )
