@@ -35,10 +35,11 @@ class RedisConfig(BaseSettings):
     )
 
     host: str
+    port: str
 
     @property
     def redis_url(self) -> str:
-        return f"redis://{self.host}"
+        return f"redis://{self.host}:{self.port}"
 
 
 class Config(BaseSettings):
