@@ -26,7 +26,7 @@ def cache(func: Callable[..., Any]):
         response_json = response.model_dump_json()
         expire_time = _get_expire_time()
         await redis_client.setex(cache_key, expire_time, response_json)
-        return json.loads(response_json)
+        return response
 
     return wrapper
 
