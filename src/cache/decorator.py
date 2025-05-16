@@ -5,6 +5,7 @@ from hashlib import md5
 from typing import Any, Callable
 
 from src.cache.redis import get_redis_client
+from src.trading.schemas.responses import BaseResponse
 
 type CacheKey = str
 type ExpireTime = timedelta
@@ -15,16 +16,17 @@ def cache(func: Callable[..., Any]):
     async def wrapper(*args, **kwargs):
         cache_key = _get_cache_key(func, *args, **kwargs)
 
-        redis_client = get_redis_client()
+        redis_client = await get_redis_client()
 
         data = await redis_client.get(cache_key)
         if data is not None:
             return json.loads(data)
 
-        result = await func(*args, **kwargs)
+        response: BaseResponse = await func(*args, **kwargs)
+        response_json = response.model_dump_json()
         expire_time = _get_expire_time()
-        await redis_client.set(cache_key, json.dumps(result), ex=expire_time)
-        return result
+        await redis_client.setex(cache_key, expire_time, response_json)
+        return json.loads(response_json)
 
     return wrapper
 

@@ -1,10 +1,15 @@
 import datetime
+from abc import ABC
 from typing import Iterable
 
 from pydantic import BaseModel
 
 
-class PaginationResponse(BaseModel):
+class BaseResponse(BaseModel, ABC):
+    pass
+
+
+class PaginationResponse(BaseResponse):
     total: int
     limit: int
     offset: int
@@ -14,7 +19,7 @@ class TradingLastDaysResponse(PaginationResponse):
     days: Iterable[datetime.date]
 
 
-class TradingResult(BaseModel):
+class TradingResult(BaseResponse):
     id: int
     exchange_product_id: str
     exchange_product_name: str

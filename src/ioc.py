@@ -1,6 +1,7 @@
 from typing import AsyncGenerator
 
 from dishka import Provider, from_context, Scope, provide, make_async_container
+from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine, async_sessionmaker, AsyncSession
 
 from src.config import Config, config
@@ -26,6 +27,14 @@ class SQLAlchemyProvider(Provider):
             yield session
 
 
+class RedisProvider(Provider):
+    config = from_context(provides=Config, scope=Scope.APP)
+
+    @provide(scope=Scope.APP)
+    def get_redis_client(self, _config: Config) -> Redis:
+        return Redis.from_url(config.redis.redis_url)
+
+
 class TradingResultProvider(Provider):
     scope = Scope.REQUEST
 
@@ -35,6 +44,7 @@ class TradingResultProvider(Provider):
 
 container = make_async_container(
     SQLAlchemyProvider(),
+    RedisProvider(),
     TradingResultProvider(),
     context={Config: config}
 )
