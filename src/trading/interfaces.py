@@ -2,7 +2,7 @@ import datetime
 from abc import ABC, abstractmethod
 from typing import Iterable, Any
 
-from src.trading.schemas.responses import TradingResult
+from src.trading.schemas.responses import TradingResult, TradingDay
 
 
 class TradingResultRepository(ABC):
@@ -11,7 +11,7 @@ class TradingResultRepository(ABC):
         pass
 
     @abstractmethod
-    async def get_last_trading_date(self, limit: int, offset: int) -> Iterable[datetime.date]:
+    async def get_last_trading_date(self, limit: int, offset: int) -> list[TradingDay]:
         pass
 
     @abstractmethod

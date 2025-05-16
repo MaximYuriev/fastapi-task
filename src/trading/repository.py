@@ -1,12 +1,12 @@
 import datetime
-from typing import Iterable, Any
+from typing import Any
 
 from sqlalchemy import select, func, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.trading.interfaces import TradingResultRepository
 from src.trading.models import TradingResult as TradingResultModel
-from src.trading.schemas.responses import TradingResult
+from src.trading.schemas.responses import TradingResult, TradingDay
 
 
 class SQLAlchemyTradingResultRepository(TradingResultRepository):
@@ -22,7 +22,7 @@ class SQLAlchemyTradingResultRepository(TradingResultRepository):
         query_result = await self._session.execute(query)
         return query_result.scalar()
 
-    async def get_last_trading_date(self, limit: int, offset: int) -> Iterable[datetime.date]:
+    async def get_last_trading_date(self, limit: int, offset: int) -> list[TradingDay]:
         query = (
             select(TradingResultModel.date)
             .distinct()
@@ -30,8 +30,9 @@ class SQLAlchemyTradingResultRepository(TradingResultRepository):
             .limit(limit)
             .offset(offset)
         )
-        result = await self._session.scalars(query)
-        return result.all()
+        days = await self._session.scalars(query)
+
+        return [TradingDay(day=day) for day in days.all()]
 
     async def get_trading_result_count_for_period(
             self,

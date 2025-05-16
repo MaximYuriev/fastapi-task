@@ -15,8 +15,12 @@ class PaginationResponse(BaseResponse):
     offset: int
 
 
+class TradingDay(BaseResponse):
+    day: datetime.date
+
+
 class TradingLastDaysResponse(PaginationResponse):
-    days: Iterable[datetime.date]
+    days: list[TradingDay]
 
 
 class TradingResult(BaseResponse):
