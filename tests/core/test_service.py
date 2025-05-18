@@ -9,113 +9,82 @@ type StartPeriodDate = datetime.date
 type EndPeriodDate = datetime.date
 
 
-async def test_get_last_trading_dates(trading_service: TradingResultService):
-    last_trading_dates = await trading_service.get_last_trading_dates(
-        query=GetLastTradingDatesQuery(),
-    )
+@pytest.mark.parametrize(
+    "query, total, length", [
+        (GetLastTradingDatesQuery(), 3, 3),
+        (GetLastTradingDatesQuery(offset=2), 3, 1),
+    ]
+)
+async def test_get_last_trading_dates(
+        trading_service: TradingResultService,
+        query: GetLastTradingDatesQuery,
+        total: int,
+        length: int,
+):
+    last_trading_dates = await trading_service.get_last_trading_dates(query)
 
-    assert last_trading_dates.total == 3
-    assert len(last_trading_dates.days) == 3
-
-
-async def test_get_last_trading_dates_w_pagination(trading_service: TradingResultService):
-    query = GetLastTradingDatesQuery(
-        offset=2,
-    )
-
-    last_trading_dates = await trading_service.get_last_trading_dates(query=query)
-
-    assert last_trading_dates.total == 3
-    assert last_trading_dates.offset == 2
-    assert len(last_trading_dates.days) == 1
+    assert last_trading_dates.total == total
+    assert last_trading_dates.offset == query.offset
+    assert len(last_trading_dates.days) == length
 
 
+@pytest.mark.parametrize(
+    "offset, total, length, oil_id", [
+        (0, 3, 3, None),
+        (2, 3, 1, None),
+        (0, 1, 1, "A10K"),
+    ]
+)
 async def test_get_dynamics(
         trading_service: TradingResultService,
         period: tuple[StartPeriodDate, EndPeriodDate],
+        offset: int,
+        total: int,
+        length: int,
+        oil_id: str | None,
 ):
     start, end = period
     query = GetDynamicsQuery(
+        oil_id=oil_id,
+        offset=offset,
         start_date=start,
         end_date=end,
     )
     trading_result_for_period = await trading_service.get_dynamics(query)
 
-    assert trading_result_for_period.total == 3
-    assert len(trading_result_for_period.trading_results) == 3
+    assert trading_result_for_period.total == total
+    assert trading_result_for_period.offset == offset
+    assert len(trading_result_for_period.trading_results) == length
 
 
-async def test_get_dynamics_w_pagination(
-        trading_service: TradingResultService,
-        period: tuple[StartPeriodDate, EndPeriodDate],
-):
-    start, end = period
-    query = GetDynamicsQuery(
-        offset=2,
-        start_date=start,
-        end_date=end,
-    )
-    trading_result_for_period = await trading_service.get_dynamics(query)
-
-    assert trading_result_for_period.total == 3
-    assert trading_result_for_period.offset == 2
-    assert len(trading_result_for_period.trading_results) == 1
-
-
-async def test_get_dynamics_w_filters(
-        trading_service: TradingResultService,
-        period: tuple[StartPeriodDate, EndPeriodDate],
-):
-    start, end = period
-    query = GetDynamicsQuery(
-        oil_id="A10K",
-        start_date=start,
-        end_date=end,
-    )
-    trading_result_for_period = await trading_service.get_dynamics(query)
-
-    assert trading_result_for_period.total == 1
-    assert len(trading_result_for_period.trading_results) == 1
-
-
+@pytest.mark.xfail(raises=ValueError, strict=True)
 async def test_get_dynamics_w_validation_error(
         trading_service: TradingResultService,
         period: tuple[StartPeriodDate, EndPeriodDate],
 ):
     start, end = period
-    with pytest.raises(ValueError):
-        query = GetDynamicsQuery(
-            start_date=end,
-            end_date=start,
-        )
-        await trading_service.get_dynamics(query)
-
-
-async def test_get_trading_results(trading_service: TradingResultService):
-    trading_result_response = await trading_service.get_trading_results(GetTradingResultQuery())
-
-    assert trading_result_response.total == 3
-    assert len(trading_result_response.trading_results) == 3
-
-
-async def test_get_trading_results_w_pagination(trading_service: TradingResultService):
-    query = GetTradingResultQuery(
-        offset=2,
+    query = GetDynamicsQuery(
+        start_date=end,
+        end_date=start,
     )
+    await trading_service.get_dynamics(query)
 
+
+@pytest.mark.parametrize(
+    "query, total, length", [
+        (GetTradingResultQuery(), 3, 3),
+        (GetTradingResultQuery(offset=2), 3, 1),
+        (GetTradingResultQuery(oil_id="A10K"), 1, 1),
+    ]
+)
+async def test_get_trading_results(
+        trading_service: TradingResultService,
+        query: GetTradingResultQuery,
+        total: int,
+        length: int,
+):
     trading_result_response = await trading_service.get_trading_results(query)
 
-    assert trading_result_response.total == 3
-    assert trading_result_response.offset == 2
-    assert len(trading_result_response.trading_results) == 1
-
-
-async def test_get_trading_result_w_filters(trading_service: TradingResultService):
-    query = GetTradingResultQuery(
-        oil_id="A10K",
-    )
-
-    trading_result_response = await trading_service.get_trading_results(query)
-
-    assert trading_result_response.total == 1
-    assert len(trading_result_response.trading_results) == 1
+    assert trading_result_response.total == total
+    assert trading_result_response.offset == query.offset
+    assert len(trading_result_response.trading_results) == length
