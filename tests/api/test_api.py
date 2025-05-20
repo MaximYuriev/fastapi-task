@@ -60,5 +60,3 @@ async def test_get_trading_dynamics_success(
     if status_code == 200:
         body = response.json()
         assert len(body["trading_results"]) == length
-
-

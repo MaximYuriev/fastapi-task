@@ -57,17 +57,17 @@ async def test_get_dynamics(
     assert len(trading_result_for_period.trading_results) == length
 
 
-@pytest.mark.xfail(raises=ValueError, strict=True)
 async def test_get_dynamics_w_validation_error(
         trading_service: TradingResultService,
         period: tuple[StartPeriodDate, EndPeriodDate],
 ):
     start, end = period
-    query = GetDynamicsQuery(
-        start_date=end,
-        end_date=start,
-    )
-    await trading_service.get_dynamics(query)
+    with pytest.raises(ValueError):
+        query = GetDynamicsQuery(
+            start_date=end,
+            end_date=start,
+        )
+        await trading_service.get_dynamics(query)
 
 
 @pytest.mark.parametrize(
